@@ -38,7 +38,7 @@ thead {
 th,
 td {
   border: 1px solid #443c68;
-  min-width: 15rem;
+  min-width: 17rem;
   padding: 1.5rem;
   line-height: 1.7;
 }
@@ -48,4 +48,5 @@ td {
 }
 .td-button {
   min-width: 20rem;
+  background-color: white;
 }

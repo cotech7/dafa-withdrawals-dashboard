@@ -1,5 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCopy } from "@fortawesome/free-solid-svg-icons";
 
 const UserData = ({ users, token, path }) => {
   const [showAlert, setShowAlert] = useState(false);
@@ -137,12 +139,49 @@ const UserData = ({ users, token, path }) => {
           created_on,
         } = user;
 
+        const rowClassName =
+          pl_balance < 25000
+            ? "green-row"
+            : pl_balance > 25000
+            ? "red-row"
+            : "";
+
         return (
-          <tr key={id}>
+          <tr key={id} className={rowClassName}>
             <td>{username}</td>
-            <td>{amount}</td>
-            <td>{account_number}</td>
-            <td>{ifsc_code}</td>
+            <td>
+              {amount}
+              <button
+                className="copy-button"
+                onClick={() => {
+                  navigator.clipboard.writeText(amount);
+                }}
+              >
+                <FontAwesomeIcon icon={faCopy} />
+              </button>
+            </td>
+            <td>
+              {account_number}
+              <button
+                className="copy-button"
+                onClick={() => {
+                  navigator.clipboard.writeText(account_number);
+                }}
+              >
+                <FontAwesomeIcon icon={faCopy} />
+              </button>
+            </td>
+            <td>
+              {ifsc_code}
+              <button
+                className="copy-button"
+                onClick={() => {
+                  navigator.clipboard.writeText(ifsc_code);
+                }}
+              >
+                <FontAwesomeIcon icon={faCopy} />
+              </button>
+            </td>
             <td>{pl_balance}</td>
             <td>{created_on}</td>
             <td className="td-button">
