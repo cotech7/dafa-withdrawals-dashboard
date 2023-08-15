@@ -11,9 +11,9 @@ const App = () => {
   const login = async () => {
     try {
       let data = JSON.stringify({
-        username: "Dafaexch9",
-        password: "Piou1234",
-        systemId: 10001,
+        // username: "Dafaexch9",
+        // password: "Piou1234",
+        // systemId: 10001,
       });
       let config = {
         method: "post",
