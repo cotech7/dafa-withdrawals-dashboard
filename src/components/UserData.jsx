@@ -3,24 +3,20 @@ import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCopy } from "@fortawesome/free-solid-svg-icons";
 
-const UserData = ({ users, token, path }) => {
+const UserData = ({ users, token, path, refreshData }) => {
   const [showAlert, setShowAlert] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [utrNumber, setUtrNumber] = useState("");
   const [remark, setRemark] = useState("");
-  const [actionType, setActionType] = useState();
-
-  const showSuccessAlertAndReload = () => {
-    setShowAlert(true);
-
-    window.location.reload();
-  };
+  const [actionType, setActionType] = useState("");
+  const [modalSuccess, setModalSuccess] = useState(false);
 
   const openModal = (user, actionType) => {
     setSelectedUser(user);
     setIsModalOpen(true);
     setActionType(actionType);
+    setModalSuccess(false); // Reset modal success state
   };
 
   const closeModal = () => {
@@ -28,6 +24,15 @@ const UserData = ({ users, token, path }) => {
     setIsModalOpen(false);
     setUtrNumber("");
     setRemark("");
+    setModalSuccess(false);
+  };
+
+  const handleModalSuccess = () => {
+    setModalSuccess(true);
+    setTimeout(() => {
+      closeModal(); // Close modal after a delay (you can adjust the delay time)
+      refreshData(); // Refresh user data
+    }, 2000); // Delay in milliseconds (1 second in this example)
   };
   const acceptRequests = async (
     id,
@@ -68,10 +73,13 @@ const UserData = ({ users, token, path }) => {
       if (response.status !== 200) {
         throw new Error("Request failed with status: " + response.status);
       } else if (response.data.status === 1) {
-        console.log(JSON.stringify(response.data));
-        alert("Withdrawal successfully!");
-        showSuccessAlertAndReload();
+        // console.log(`amount:${amount} remark:${remark}`);
+        // console.log(JSON.stringify(response.data));
+        // alert("Withdrawal successfully!");
+        handleModalSuccess();
+        // showSuccessAlertAndReload();
       } else {
+        // console.log(response);
         throw new Error("Invalid response data format");
       }
     } catch (error) {
@@ -110,9 +118,10 @@ const UserData = ({ users, token, path }) => {
       if (response.status !== 200) {
         throw new Error("Request failed with status: " + response.status);
       } else if (response.data.status === 1) {
-        console.log(response.data);
-        alert("Request Rejected");
-        showSuccessAlertAndReload();
+        // console.log(response.data);
+        // alert("Request Rejected");
+        handleModalSuccess();
+        // showSuccessAlertAndReload();
       } else {
         throw new Error("Invalid response data format");
       }
@@ -209,6 +218,11 @@ const UserData = ({ users, token, path }) => {
             <span className="close" onClick={closeModal}>
               &times;
             </span>
+            {modalSuccess && (
+              <div className="modal-success">
+                Request successfully processed
+              </div>
+            )}
             {actionType === "accept" && (
               <>
                 <label>UTR Number:</label>
@@ -251,6 +265,7 @@ const UserData = ({ users, token, path }) => {
                 Reject
               </button>
             )}
+
             <button className="reject" onClick={closeModal}>
               Cancel
             </button>
