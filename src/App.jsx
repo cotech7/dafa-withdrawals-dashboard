@@ -1,168 +1,55 @@
-import { useEffect, useState } from "react";
-import axios from "axios";
-import UserData from "./components/UserData.jsx";
-import "./App.css";
+import React, { useState, useEffect } from "react";
+import LoginPage from "./components/LoginPage";
+import Dashboard from "./components/Dashboard";
 
-const App = () => {
-  const [users, setUsers] = useState([]);
-  const [token, setToken] = useState(null);
-  const [path, setPath] = useState();
-  const [isRefreshing, setIsRefreshing] = useState(false);
-
-  const login = async () => {
-    try {
-      let data = JSON.stringify({
-        username: import.meta.env.VITE_REACT_APP_USERNAME,
-        password: import.meta.env.VITE_REACT_APP_PASSWORD,
-        systemId: import.meta.env.VITE_REACT_APP_SYSTEM_ID,
-      });
-      let config = {
-        method: "post",
-        maxBodyLength: Infinity,
-        headers: {
-          authority: "adminapi.bestlive.io",
-          accept: "application/json, text/plain, */*",
-          "accept-language": "en-IN,en;q=0.9,mr;q=0.8,lb;q=0.7",
-          "cache-control": "no-cache, no-store",
-          "content-type": "application/json",
-          encryption: "false",
-        },
-        data: data,
-      };
-      const response = await axios.post(
-        "https://adminapi.bestlive.io/api/login",
-        data,
-        config
-      );
-      if (response.status !== 200) {
-        response_value = {
-          success: false,
-          message: response.status,
-        };
-      } else {
-        // console.log(response.data);
-        const newToken = response.data.data.token;
-        // setToken(newToken);
-        sessionStorage.setItem("token", newToken);
-
-        return newToken;
-      }
-    } catch (error) {
-      console.error("Error fetching data:", error);
-    }
-  };
-
-  const fetchUsers = async (token) => {
-    try {
-      // console.log(token);
-      let data = JSON.stringify({
-        type: "",
-        nType: "withdraw",
-        start_date: "",
-        end_date: "",
-        isFirst: 1,
-      });
-      let config = {
-        method: "post",
-        maxBodyLength: Infinity,
-        headers: {
-          authority: "adminapi.bestlive.io",
-          accept: "application/json, text/plain, */*",
-          "accept-language": "en-IN,en;q=0.9,mr;q=0.8,lb;q=0.7",
-          authorization: `Bearer ${token}`,
-          "cache-control": "no-cache, no-store",
-          "content-type": "application/json",
-          encryption: "false",
-        },
-        data: data,
-      };
-      const response = await axios.post(
-        "https://adminapi.bestlive.io/api/bank-account/request",
-        data,
-        config
-      );
-      setUsers(response.data.data);
-      setPath(response.data.path);
-      // console.log(response.data.data);
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
-  const refreshData = async () => {
-    try {
-      if (token) {
-        setIsRefreshing(true); // Add this line to set the refreshing flag
-
-        await fetchUsers(token);
-
-        setIsRefreshing(false); // Clear the refreshing flag when done
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  };
+function App() {
+  const [loggedIn, setLoggedIn] = useState(false);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        let tokenFromStorage = sessionStorage.getItem("token");
-        if (!tokenFromStorage) {
-          const newToken = await login();
-          if (newToken) {
-            // console.log(`this is newToken ${newToken}`);
-            setToken(newToken); // Set the token state here as well
-            await fetchUsers(newToken);
-          }
-        } else {
-          setToken(tokenFromStorage); // Set the token state if already present
-          await fetchUsers(tokenFromStorage);
-        }
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-    };
-
-    fetchData();
+    // Check if the user was previously logged in
+    // const storedLoggedIn = sessionStorage.getItem("loggedIn");
+    const storedSecretKey = sessionStorage.getItem("secretKey");
+    if (storedSecretKey === import.meta.env.VITE_REACT_APP_SECRET_KEY) {
+      setLoggedIn(true);
+    } else {
+      sessionStorage.removeItem("secretKey");
+    }
   }, []);
 
+  const handleLogin = () => {
+    setLoggedIn(true);
+    // Store the login state in localStorage
+    // sessionStorage.setItem("loggedIn", "true");
+    sessionStorage.setItem(
+      "secretKey",
+      import.meta.env.VITE_REACT_APP_SECRET_KEY
+    );
+
+    // Set a session timeout here (e.g., 30 minutes)
+    setTimeout(() => {
+      setLoggedIn(false);
+      // Remove the login state from localStorage on timeout
+      // sessionStorage.removeItem("loggedIn");
+      sessionStorage.removeItem("secretKey");
+    }, 2 * 60 * 1000); // 30 minutes in milliseconds
+  };
+
+  const handleLogout = () => {
+    setLoggedIn(false);
+    // Remove the login state from localStorage on logout
+    // sessionStorage.removeItem("loggedIn");
+    sessionStorage.removeItem("secretKey");
+  };
+
   return (
-    <>
-      <div>
-        <h1>Dafa withdrawals</h1>
-        <button
-          className={`action-button ${isRefreshing ? "refreshing-button" : ""}`}
-          onClick={refreshData}
-          disabled={isRefreshing}
-        >
-          {isRefreshing ? "Refreshing..." : "Refresh"}
-        </button>
-      </div>
-      <div className="table-container">
-        <table>
-          <thead>
-            <tr>
-              <th>Username</th>
-              <th>Amount</th>
-              <th>Account No.</th>
-              <th>IFSC Code</th>
-              <th>User P/L</th>
-              <th>Date & Time</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            <UserData
-              users={users}
-              token={token}
-              path={path}
-              refreshData={refreshData}
-            />
-          </tbody>
-        </table>
-      </div>
-    </>
+    <div className="App">
+      {loggedIn ? (
+        <Dashboard onLogout={handleLogout} />
+      ) : (
+        <LoginPage onLogin={handleLogin} />
+      )}
+    </div>
   );
-};
+}
 
 export default App;

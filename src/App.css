@@ -198,7 +198,8 @@ button {
   border: none;
 }
 
-.reject {
+.reject,
+.logout-btn {
   background-color: #f44336; /* Red */
   color: white;
   border: none;
@@ -209,7 +210,8 @@ button {
   color: white; /* You can adjust the text color as needed */
 }
 
-.red-row {
+.red-row,
+.logout-btn:hover {
   background-color: red;
   color: white; /* You can adjust the text color as needed */
 }
