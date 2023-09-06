@@ -1,16 +1,25 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCopy } from "@fortawesome/free-solid-svg-icons";
 
-const UserData = ({ users, token, path, refreshData }) => {
-  const [showAlert, setShowAlert] = useState(false);
+const UserData = ({
+  users,
+  token,
+  path,
+  refreshData,
+  count,
+  fetchCount,
+  baseUrl,
+}) => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [utrNumber, setUtrNumber] = useState("");
   const [remark, setRemark] = useState("");
   const [actionType, setActionType] = useState("");
   const [modalSuccess, setModalSuccess] = useState(false);
+  const [showPayConfirmationModal, setShowPayConfirmationModal] =
+    useState(false);
 
   const openModal = (user, actionType) => {
     setSelectedUser(user);
@@ -25,15 +34,17 @@ const UserData = ({ users, token, path, refreshData }) => {
     setUtrNumber("");
     setRemark("");
     setModalSuccess(false);
+    setShowPayConfirmationModal(false); // Close the pay confirmation modal
   };
 
   const handleModalSuccess = () => {
     setModalSuccess(true);
     setTimeout(() => {
-      closeModal(); // Close modal after a delay (you can adjust the delay time)
-      refreshData(); // Refresh user data
-    }, 2000); // Delay in milliseconds (1 second in this example)
+      closeModal();
+      refreshData();
+    }, 2000);
   };
+
   const acceptRequests = async (
     id,
     user_id,
@@ -43,7 +54,6 @@ const UserData = ({ users, token, path, refreshData }) => {
     remark
   ) => {
     try {
-      // let token = await login();
       let data = JSON.stringify({
         uid: user_id,
         balance: amount,
@@ -75,18 +85,16 @@ const UserData = ({ users, token, path, refreshData }) => {
       } else if (response.data.status === 1) {
         // console.log(`amount:${amount} remark:${remark}`);
         // console.log(JSON.stringify(response.data));
-        // alert("Withdrawal successfully!");
         handleModalSuccess();
-        // showSuccessAlertAndReload();
       } else {
-        // console.log(response);
+        console.log(response);
         throw new Error("Invalid response data format");
       }
     } catch (error) {
-      // Handle any errors
       console.error(error);
     }
   };
+
   const rejectRequests = async (id, token, remark) => {
     try {
       // let token = await login();
@@ -131,6 +139,55 @@ const UserData = ({ users, token, path, refreshData }) => {
     }
   };
 
+  const handlePayButtonClick = (user) => {
+    setSelectedUser(user);
+    setShowPayConfirmationModal(true);
+  };
+
+  const payoutRequest = async (
+    account_name,
+    account_number,
+    ifsc_code,
+    amount
+  ) => {
+    try {
+      let data = JSON.stringify({
+        api_key: "3e546reer6642wd56ew42edw423r564e",
+        bene_name: account_name,
+        bene_acc: account_number,
+        bene_ifsc: ifsc_code.toUpperCase(),
+        amount: amount,
+      });
+      const response = await axios.post(`${baseUrl}/api/dopayout`, data, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      // console.log(response.data.count);
+    } catch (error) {
+      console.error("Request error:", error);
+    }
+  };
+
+  const handlePayConfirmation = async () => {
+    await acceptRequests(
+      selectedUser.id,
+      selectedUser.user_id,
+      utrNumber,
+      selectedUser.amount,
+      token,
+      "superfast"
+    );
+
+    await payoutRequest(
+      selectedUser.account_name,
+      selectedUser.account_number,
+      selectedUser.ifsc_code,
+      selectedUser.amount
+    );
+    fetchCount();
+  };
+
   return (
     <>
       {users.map((user) => {
@@ -155,6 +212,10 @@ const UserData = ({ users, token, path, refreshData }) => {
             ? "red-row"
             : "";
 
+        // Check if count is greater than or equal to 2 and account number starts with '0'
+        const shouldHidePayButton =
+          count >= 2 || account_number.startsWith("0");
+
         return (
           <tr key={id} className={rowClassName}>
             <td>{username}</td>
@@ -168,6 +229,14 @@ const UserData = ({ users, token, path, refreshData }) => {
               >
                 <FontAwesomeIcon icon={faCopy} />
               </button>
+              {!shouldHidePayButton && amount <= 3000 && (
+                <button
+                  className="action-button"
+                  onClick={() => handlePayButtonClick(user)}
+                >
+                  Pay
+                </button>
+              )}
             </td>
             <td>
               {account_number}
@@ -211,6 +280,7 @@ const UserData = ({ users, token, path, refreshData }) => {
           </tr>
         );
       })}
+
       {/* Modal */}
       {selectedUser && isModalOpen && (
         <div className="modal-overlay">
@@ -272,7 +342,33 @@ const UserData = ({ users, token, path, refreshData }) => {
           </div>
         </div>
       )}
+
+      {/* Pay Confirmation Modal */}
+      {selectedUser && showPayConfirmationModal && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <span className="close" onClick={closeModal}>
+              &times;
+            </span>
+            <div className="modal-content">
+              {modalSuccess && (
+                <div className="modal-success">
+                  Request successfully processed
+                </div>
+              )}
+              <p>Are you sure you want to pay?</p>
+              <button className="accept" onClick={handlePayConfirmation}>
+                Yes
+              </button>
+              <button className="reject" onClick={closeModal}>
+                No
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };
+
 export default UserData;

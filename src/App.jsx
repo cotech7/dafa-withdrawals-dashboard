@@ -26,12 +26,12 @@ function App() {
     );
 
     // Set a session timeout here (e.g., 30 minutes)
-    setTimeout(() => {
-      setLoggedIn(false);
-      // Remove the login state from localStorage on timeout
-      // sessionStorage.removeItem("loggedIn");
-      sessionStorage.removeItem("secretKey");
-    }, 2 * 60 * 1000); // 30 minutes in milliseconds
+    // setTimeout(() => {
+    //   setLoggedIn(false);
+    //   // Remove the login state from localStorage on timeout
+    //   // sessionStorage.removeItem("loggedIn");
+    //   sessionStorage.removeItem("secretKey");
+    // }, 30 * 60 * 1000); // 30 minutes in milliseconds
   };
 
   const handleLogout = () => {

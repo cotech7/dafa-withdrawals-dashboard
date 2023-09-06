@@ -8,6 +8,10 @@ const Dashboard = ({ onLogout }) => {
   const [token, setToken] = useState(null);
   const [path, setPath] = useState();
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [count, setCount] = useState(0);
+  const [isEnableButtonDisabled, setIsEnableButtonDisabled] = useState(true);
+
+  const baseUrl = import.meta.env.VITE_REACT_APP_SERVER_URL;
 
   const login = async () => {
     try {
@@ -102,29 +106,64 @@ const Dashboard = ({ onLogout }) => {
       console.error(e);
     }
   };
+  const fetchData = async () => {
+    try {
+      let tokenFromStorage = sessionStorage.getItem("token");
+      if (!tokenFromStorage) {
+        const newToken = await login();
+        if (newToken) {
+          // console.log(`this is newToken ${newToken}`);
+          setToken(newToken); // Set the token state here as well
+          await fetchUsers(newToken);
+        }
+      } else {
+        setToken(tokenFromStorage); // Set the token state if already present
+        await fetchUsers(tokenFromStorage);
+      }
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  };
+
+  const fetchCount = () => {
+    axios
+      .get(`${baseUrl}/api/count`)
+      .then((response) => {
+        // console.log(response.data);
+        setCount(response.data.count);
+      })
+      .catch((error) => {
+        console.error("Error fetching count:", error);
+      });
+  };
+
+  const resetCount = () => {
+    // Make a POST request to reset the count to zero
+    axios
+      .post(`${baseUrl}/api/reset-count`)
+      .then((response) => {
+        console.log(response.data.message);
+        // After resetting, you can fetch the count again to update the UI
+        fetchCount();
+      })
+      .catch((error) => {
+        console.error("Error resetting count:", error);
+      });
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        let tokenFromStorage = sessionStorage.getItem("token");
-        if (!tokenFromStorage) {
-          const newToken = await login();
-          if (newToken) {
-            // console.log(`this is newToken ${newToken}`);
-            setToken(newToken); // Set the token state here as well
-            await fetchUsers(newToken);
-          }
-        } else {
-          setToken(tokenFromStorage); // Set the token state if already present
-          await fetchUsers(tokenFromStorage);
-        }
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-    };
-
     fetchData();
+    fetchCount();
   }, []);
+
+  // Update the useEffect to set the enable button state based on the count
+  useEffect(() => {
+    if (count >= 2) {
+      setIsEnableButtonDisabled(false);
+    } else {
+      setIsEnableButtonDisabled(true);
+    }
+  }, [count]);
 
   return (
     <>
@@ -139,6 +178,13 @@ const Dashboard = ({ onLogout }) => {
         </button>
         <button className="logout-btn" onClick={onLogout}>
           Logout
+        </button>
+        <button
+          className="enable-button"
+          onClick={resetCount}
+          disabled={isEnableButtonDisabled}
+        >
+          Enable
         </button>
       </div>
       <div className="table-container">
@@ -160,6 +206,9 @@ const Dashboard = ({ onLogout }) => {
               token={token}
               path={path}
               refreshData={refreshData}
+              count={count}
+              fetchCount={fetchCount}
+              baseUrl={baseUrl}
             />
           </tbody>
         </table>
