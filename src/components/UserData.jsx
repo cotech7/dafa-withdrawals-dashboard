@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCopy } from "@fortawesome/free-solid-svg-icons";
+import { toast } from "react-toastify";
 
 const UserData = ({
   users,
@@ -17,7 +18,6 @@ const UserData = ({
   const [utrNumber, setUtrNumber] = useState("");
   const [remark, setRemark] = useState("");
   const [actionType, setActionType] = useState("");
-  const [modalSuccess, setModalSuccess] = useState(false);
   const [showPayConfirmationModal, setShowPayConfirmationModal] =
     useState(false);
 
@@ -25,7 +25,6 @@ const UserData = ({
     setSelectedUser(user);
     setIsModalOpen(true);
     setActionType(actionType);
-    setModalSuccess(false); // Reset modal success state
   };
 
   const closeModal = () => {
@@ -33,16 +32,7 @@ const UserData = ({
     setIsModalOpen(false);
     setUtrNumber("");
     setRemark("");
-    setModalSuccess(false);
     setShowPayConfirmationModal(false); // Close the pay confirmation modal
-  };
-
-  const handleModalSuccess = () => {
-    setModalSuccess(true);
-    setTimeout(() => {
-      closeModal();
-      refreshData();
-    }, 2000);
   };
 
   const acceptRequests = async (
@@ -84,14 +74,21 @@ const UserData = ({
         throw new Error("Request failed with status: " + response.status);
       } else if (response.data.status === 1) {
         // console.log(`amount:${amount} remark:${remark}`);
-        // console.log(JSON.stringify(response.data));
-        handleModalSuccess();
+        // console.log(JSON.stringify(response.data.success.message));
+        toast.success(response.data.success.message, {
+          position: "top-right",
+          autoClose: 3000, // Close the toast after 3 seconds
+        });
+        refreshData();
       } else {
         console.log(response);
         throw new Error("Invalid response data format");
       }
     } catch (error) {
       console.error(error);
+    } finally {
+      // Close the modal whether the payment succeeded or not
+      closeModal();
     }
   };
 
@@ -126,16 +123,22 @@ const UserData = ({
       if (response.status !== 200) {
         throw new Error("Request failed with status: " + response.status);
       } else if (response.data.status === 1) {
-        // console.log(response.data);
+        console.log(response.data);
         // alert("Request Rejected");
-        handleModalSuccess();
         // showSuccessAlertAndReload();
+        toast.success(response.data.message, {
+          position: "top-right",
+          autoClose: 3000, // Close the toast after 3 seconds
+        });
+        refreshData();
       } else {
         throw new Error("Invalid response data format");
       }
     } catch (error) {
       // Handle any errors
       console.error(error);
+    } finally {
+      closeModal();
     }
   };
 
@@ -163,29 +166,72 @@ const UserData = ({
           "Content-Type": "application/json",
         },
       });
-      // console.log(response.data.count);
+      if (response.status !== 200) {
+        toast.error("Connection error", {
+          position: "top-right",
+          autoClose: 3000, // Close the toast after 3 seconds
+        });
+        throw new Error("Request error: " + response.status);
+      }
+      return response.data;
     } catch (error) {
       console.error("Request error:", error);
+      throw error;
     }
   };
 
   const handlePayConfirmation = async () => {
-    await acceptRequests(
-      selectedUser.id,
-      selectedUser.user_id,
-      utrNumber,
-      selectedUser.amount,
-      token,
-      "superfast"
-    );
+    try {
+      // Execute the payout request first
+      const payoutResponse = await payoutRequest(
+        selectedUser.account_name,
+        selectedUser.account_number,
+        selectedUser.ifsc_code,
+        selectedUser.amount
+      );
 
-    await payoutRequest(
-      selectedUser.account_name,
-      selectedUser.account_number,
-      selectedUser.ifsc_code,
-      selectedUser.amount
-    );
-    fetchCount();
+      // console.log(payoutResponse);
+
+      // Check the response from payoutRequest
+      if (payoutResponse.status === 1) {
+        if (payoutResponse.message === "Transaction Initiate Successfull") {
+          // Payout was successful, now accept the request
+          await acceptRequests(
+            selectedUser.id,
+            selectedUser.user_id,
+            utrNumber,
+            selectedUser.amount,
+            token,
+            "superfast"
+          );
+
+          toast.success(payoutResponse.message, {
+            position: "top-right",
+            autoClose: 3000, // Close the toast after 3 seconds
+          });
+        } else if (payoutResponse.message === "Plese Pay After 10 min") {
+          toast.warning(payoutResponse.message, {
+            position: "top-right",
+            autoClose: 3000, // Close the toast after 3 seconds
+          });
+        }
+      } else if (payoutResponse.status === 0) {
+        toast.error(payoutResponse.message, {
+          position: "top-right",
+          autoClose: 3000, // Close the toast after 3 seconds
+        });
+      } else {
+        // Handle payout failure
+        console.error("Payout request failed");
+      }
+      fetchCount();
+    } catch (error) {
+      // Handle any errors
+      console.error("Error during payment:", error);
+    } finally {
+      // Close the modal whether the payment succeeded or not
+      closeModal();
+    }
   };
 
   return (
@@ -214,7 +260,7 @@ const UserData = ({
 
         // Check if count is greater than or equal to 2 and account number starts with '0'
         const shouldHidePayButton =
-          count >= 2 || account_number.startsWith("0");
+          count >= 3 || account_number.startsWith("0");
 
         return (
           <tr key={id} className={rowClassName}>
@@ -229,7 +275,7 @@ const UserData = ({
               >
                 <FontAwesomeIcon icon={faCopy} />
               </button>
-              {!shouldHidePayButton && amount <= 3000 && (
+              {!shouldHidePayButton && amount <= 1000 && (
                 <button
                   className="action-button"
                   onClick={() => handlePayButtonClick(user)}
@@ -288,11 +334,6 @@ const UserData = ({
             <span className="close" onClick={closeModal}>
               &times;
             </span>
-            {modalSuccess && (
-              <div className="modal-success">
-                Request successfully processed
-              </div>
-            )}
             {actionType === "accept" && (
               <>
                 <label>UTR Number:</label>
@@ -351,11 +392,6 @@ const UserData = ({
               &times;
             </span>
             <div className="modal-content">
-              {modalSuccess && (
-                <div className="modal-success">
-                  Request successfully processed
-                </div>
-              )}
               <p>Are you sure you want to pay?</p>
               <button className="accept" onClick={handlePayConfirmation}>
                 Yes

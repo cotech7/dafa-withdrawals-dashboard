@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import LoginPage from "./components/LoginPage";
 import Dashboard from "./components/Dashboard";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 function App() {
   const [loggedIn, setLoggedIn] = useState(false);
@@ -48,6 +50,7 @@ function App() {
       ) : (
         <LoginPage onLogin={handleLogin} />
       )}
+      <ToastContainer position="top-right" autoClose={3000} />
     </div>
   );
 }
