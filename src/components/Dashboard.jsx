@@ -9,7 +9,7 @@ const Dashboard = ({ onLogout }) => {
   const [path, setPath] = useState();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [count, setCount] = useState(0);
-  const [isEnableButtonDisabled, setIsEnableButtonDisabled] = useState(true);
+  const [isButtonEnabled, setIsButtonEnabled] = useState(false);
 
   const baseUrl = import.meta.env.VITE_REACT_APP_SERVER_URL;
 
@@ -137,18 +137,28 @@ const Dashboard = ({ onLogout }) => {
       });
   };
 
-  const resetCount = () => {
-    // Make a POST request to reset the count to zero
-    axios
-      .post(`${baseUrl}/api/reset-count`)
-      .then((response) => {
-        console.log(response.data.message);
-        // After resetting, you can fetch the count again to update the UI
-        fetchCount();
-      })
-      .catch((error) => {
-        console.error("Error resetting count:", error);
-      });
+  const toggleButtonState = () => {
+    if (isButtonEnabled) {
+      axios
+        .post(`${baseUrl}/api/disable-count`)
+        .then((response) => {
+          console.log(response.data.message);
+          fetchCount();
+        })
+        .catch((error) => {
+          console.error("Error disabling:", error);
+        });
+    } else {
+      axios
+        .post(`${baseUrl}/api/reset-count`)
+        .then((response) => {
+          console.log(response.data.message);
+          fetchCount();
+        })
+        .catch((error) => {
+          console.error("Error resetting count:", error);
+        });
+    }
   };
 
   useEffect(() => {
@@ -158,11 +168,7 @@ const Dashboard = ({ onLogout }) => {
 
   // Update the useEffect to set the enable button state based on the count
   useEffect(() => {
-    if (count >= 2) {
-      setIsEnableButtonDisabled(false);
-    } else {
-      setIsEnableButtonDisabled(true);
-    }
+    setIsButtonEnabled(count < 3);
   }, [count]);
 
   return (
@@ -179,12 +185,8 @@ const Dashboard = ({ onLogout }) => {
         <button className="logout-btn" onClick={onLogout}>
           Logout
         </button>
-        <button
-          className="enable-button"
-          onClick={resetCount}
-          disabled={isEnableButtonDisabled}
-        >
-          Enable
+        <button className="enable-button" onClick={toggleButtonState}>
+          {isButtonEnabled ? "Disable" : "Enable"}
         </button>
       </div>
       <div className="table-container">
