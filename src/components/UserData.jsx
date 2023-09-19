@@ -267,7 +267,10 @@ const UserData = ({
 
         // Check if count is greater than or equal to 2 and account number starts with '0'
         const shouldHidePayButton =
-          count >= 3 || account_number.startsWith("0");
+          count >= 3 ||
+          typeof account_number !== "string" ||
+          account_number.startsWith("0");
+        // count >= 3 || account_number.startsWith("0");
 
         return (
           <tr key={id} className={rowClassName}>
