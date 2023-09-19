@@ -8,7 +8,7 @@ const Dashboard = ({ onLogout }) => {
   const [token, setToken] = useState(null);
   const [path, setPath] = useState();
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [count, setCount] = useState(0);
+  const [count, setCount] = useState(3);
   const [isButtonEnabled, setIsButtonEnabled] = useState(false);
 
   const baseUrl = import.meta.env.VITE_REACT_APP_SERVER_URL;

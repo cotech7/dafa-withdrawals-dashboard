@@ -20,6 +20,7 @@ const UserData = ({
   const [actionType, setActionType] = useState("");
   const [showPayConfirmationModal, setShowPayConfirmationModal] =
     useState(false);
+  const [isPaymentInProgress, setIsPaymentInProgress] = useState(false);
 
   const openModal = (user, actionType) => {
     setSelectedUser(user);
@@ -143,6 +144,10 @@ const UserData = ({
   };
 
   const handlePayButtonClick = (user) => {
+    // Check if a payment request is already in progress
+    if (isPaymentInProgress) {
+      return;
+    }
     setSelectedUser(user);
     setShowPayConfirmationModal(true);
   };
@@ -182,6 +187,7 @@ const UserData = ({
 
   const handlePayConfirmation = async () => {
     try {
+      setIsPaymentInProgress(true);
       // Execute the payout request first
       const payoutResponse = await payoutRequest(
         selectedUser.account_name,
@@ -229,6 +235,7 @@ const UserData = ({
       // Handle any errors
       console.error("Error during payment:", error);
     } finally {
+      setIsPaymentInProgress(false);
       // Close the modal whether the payment succeeded or not
       closeModal();
     }
@@ -279,6 +286,7 @@ const UserData = ({
                 <button
                   className="action-button"
                   onClick={() => handlePayButtonClick(user)}
+                  disabled={isPaymentInProgress}
                 >
                   Pay
                 </button>
