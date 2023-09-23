@@ -160,11 +160,10 @@ const UserData = ({
   ) => {
     try {
       let data = JSON.stringify({
-        api_key: "3e546reer6642wd56ew42edw423r564e",
-        bene_name: account_name,
-        bene_acc: account_number,
-        bene_ifsc: ifsc_code.toUpperCase(),
         amount: amount,
+        bene_name: account_name,
+        bene_account: account_number,
+        bene_ifsc: ifsc_code.toUpperCase(),
       });
       const response = await axios.post(`${baseUrl}/api/dopayout`, data, {
         headers: {
@@ -199,30 +198,26 @@ const UserData = ({
       // console.log(payoutResponse);
 
       // Check the response from payoutRequest
-      if (payoutResponse.status === 1) {
-        if (payoutResponse.message === "Transaction Initiate Successfull") {
-          // Payout was successful, now accept the request
-          await acceptRequests(
-            selectedUser.id,
-            selectedUser.user_id,
-            utrNumber,
-            selectedUser.amount,
-            token,
-            "superfast"
-          );
+      if (
+        payoutResponse.error === 0 &&
+        payoutResponse.message === "Transaction Successful"
+      ) {
+        // Payout was successful, now accept the request
+        await acceptRequests(
+          selectedUser.id,
+          selectedUser.user_id,
+          utrNumber,
+          selectedUser.amount,
+          token,
+          "superfast"
+        );
 
-          toast.success(payoutResponse.message, {
-            position: "top-right",
-            autoClose: 3000, // Close the toast after 3 seconds
-          });
-        } else if (payoutResponse.message === "Plese Pay After 10 min") {
-          toast.warning(payoutResponse.message, {
-            position: "top-right",
-            autoClose: 3000, // Close the toast after 3 seconds
-          });
-        }
-      } else if (payoutResponse.status === 0) {
-        toast.error(payoutResponse.message, {
+        toast.success(payoutResponse.message, {
+          position: "top-right",
+          autoClose: 3000, // Close the toast after 3 seconds
+        });
+      } else if (payoutResponse.error === 1) {
+        toast.warning(payoutResponse.message, {
           position: "top-right",
           autoClose: 3000, // Close the toast after 3 seconds
         });
@@ -285,7 +280,7 @@ const UserData = ({
               >
                 <FontAwesomeIcon icon={faCopy} />
               </button>
-              {!shouldHidePayButton && amount <= 1000 && (
+              {!shouldHidePayButton && amount <= 3000 && (
                 <button
                   className="action-button"
                   onClick={() => handlePayButtonClick(user)}
