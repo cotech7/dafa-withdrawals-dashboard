@@ -216,6 +216,14 @@ const UserData = ({
           position: "top-right",
           autoClose: 3000, // Close the toast after 3 seconds
         });
+      } else if (
+        payoutResponse.error === 0 &&
+        payoutResponse.message === "Failure at Bank end"
+      ) {
+        toast.error(payoutResponse.message, {
+          position: "top-right",
+          autoClose: 3000, // Close the toast after 3 seconds
+        });
       } else if (payoutResponse.error === 1) {
         toast.warning(payoutResponse.message, {
           position: "top-right",
