@@ -165,7 +165,7 @@ const UserData = ({
         bene_account: account_number,
         bene_ifsc: ifsc_code.toUpperCase(),
       });
-      const response = await axios.post(`${baseUrl}/api/dopayout`, data, {
+      const response = await axios.post(`${baseUrl}/api/dafapayout`, data, {
         headers: {
           "Content-Type": "application/json",
         },
