@@ -181,6 +181,7 @@ const Dashboard = ({ onLogout }) => {
   useEffect(() => {
     fetchData();
     fetchCount();
+    fetchBalance();
   }, []);
 
   // Update the useEffect to set the enable button state based on the count
