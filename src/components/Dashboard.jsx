@@ -10,6 +10,7 @@ const Dashboard = ({ onLogout }) => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [count, setCount] = useState(3);
   const [isButtonEnabled, setIsButtonEnabled] = useState(false);
+  const [balance, setBalance] = useState("disconnected");
 
   const baseUrl = import.meta.env.VITE_REACT_APP_SERVER_URL;
 
@@ -100,6 +101,8 @@ const Dashboard = ({ onLogout }) => {
 
         await fetchUsers(token);
 
+        await fetchBalance();
+
         setIsRefreshing(false); // Clear the refreshing flag when done
       }
     } catch (e) {
@@ -135,6 +138,20 @@ const Dashboard = ({ onLogout }) => {
       .catch((error) => {
         console.error("Error fetching count:", error);
       });
+  };
+
+  const fetchBalance = async () => {
+    try {
+      const response = await axios.get(`${baseUrl}/api/ddddbalance`);
+      // console.log(response.data);
+      if (response.data.Balance) {
+        setBalance(response.data.Balance);
+      } else {
+        setBalance("disconnected");
+      }
+    } catch (error) {
+      console.log(error.message);
+    }
   };
 
   const toggleButtonState = () => {
@@ -188,6 +205,7 @@ const Dashboard = ({ onLogout }) => {
         <button className="enable-button" onClick={toggleButtonState}>
           {isButtonEnabled ? "Disable" : "Enable"}
         </button>
+        <h2>Balance : {balance}</h2>
       </div>
       <div className="table-container">
         <table>
