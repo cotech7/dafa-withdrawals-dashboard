@@ -289,7 +289,7 @@ const UserData = ({
               >
                 <FontAwesomeIcon icon={faCopy} />
               </button>
-              {!shouldHidePayButton && amount <= 3000 && (
+              {!shouldHidePayButton && amount <= 10000 && (
                 <button
                   className="action-button"
                   onClick={() => handlePayButtonClick(user)}
