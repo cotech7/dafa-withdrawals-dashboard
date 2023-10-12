@@ -201,7 +201,7 @@ const UserData = ({
       if (
         payoutResponse.error === 0 &&
         (payoutResponse.message === "Transaction Successful" ||
-          payoutResponse.message === "Transaction Pending at bank end")
+          payoutResponse.message === "Transfer request pending at the bank")
       ) {
         // Payout was successful, now accept the request
         await acceptRequests(
