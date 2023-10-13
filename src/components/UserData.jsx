@@ -200,8 +200,8 @@ const UserData = ({
       // Check the response from payoutRequest
       if (
         payoutResponse.error === 0 &&
-        (payoutResponse.message === "Transaction Successful" ||
-          payoutResponse.message === "Transfer request pending at the bank")
+        (payoutResponse.transaction_details.status === "SUCCESS" ||
+          payoutResponse.transaction_details.status === "PENDING")
       ) {
         // Payout was successful, now accept the request
         await acceptRequests(
@@ -219,7 +219,7 @@ const UserData = ({
         });
       } else if (
         payoutResponse.error === 0 &&
-        payoutResponse.message === "Failure at Bank end"
+        payoutResponse.transaction_details.status === "FAILED"
       ) {
         toast.error(payoutResponse.message, {
           position: "top-right",
