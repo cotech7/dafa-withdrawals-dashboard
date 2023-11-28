@@ -13,6 +13,7 @@ const Dashboard = ({ onLogout }) => {
   const [balance, setBalance] = useState("disconnected");
 
   const baseUrl = import.meta.env.VITE_REACT_APP_SERVER_URL;
+  const whatsappUrl = import.meta.env.VITE_REACT_APP_WHATSAPP_URL;
 
   const login = async () => {
     try {
@@ -65,7 +66,7 @@ const Dashboard = ({ onLogout }) => {
       let config = {
         method: "post",
         maxBodyLength: Infinity,
-        url: "https://five00-backend.onrender.com/api/requests/sendnotification",
+        url: `${whatsappUrl}/api/requests/sendnotification`,
         headers: {
           "Content-Type": "application/json",
         },
