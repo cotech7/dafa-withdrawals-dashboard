@@ -5,7 +5,7 @@ import "../App.css";
 
 const Dashboard = ({ onLogout }) => {
   const [users, setUsers] = useState([]);
-  const [token, setToken] = useState(null);
+  // const [token, setToken] = useState(null);
   const [path, setPath] = useState();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [count, setCount] = useState(3);
@@ -14,49 +14,50 @@ const Dashboard = ({ onLogout }) => {
 
   const baseUrl = import.meta.env.VITE_REACT_APP_SERVER_URL;
   const whatsappUrl = import.meta.env.VITE_REACT_APP_WHATSAPP_URL;
+  const token = import.meta.env.VITE_REACT_APP_TOKEN;
 
-  const login = async () => {
-    try {
-      let data = JSON.stringify({
-        username: import.meta.env.VITE_REACT_APP_USERNAME,
-        password: import.meta.env.VITE_REACT_APP_PASSWORD,
-        systemId: import.meta.env.VITE_REACT_APP_SYSTEM_ID,
-      });
-      let config = {
-        method: "post",
-        maxBodyLength: Infinity,
-        headers: {
-          authority: "adminapi.bestlive.io",
-          accept: "application/json, text/plain, */*",
-          "accept-language": "en-IN,en;q=0.9,mr;q=0.8,lb;q=0.7",
-          "cache-control": "no-cache, no-store",
-          "content-type": "application/json",
-          encryption: "false",
-        },
-        data: data,
-      };
-      const response = await axios.post(
-        "https://adminapi.bestlive.io/api/login",
-        data,
-        config
-      );
-      if (response.status !== 200) {
-        response_value = {
-          success: false,
-          message: response.status,
-        };
-      } else {
-        // console.log(response.data);
-        const newToken = response.data.data.token;
-        // setToken(newToken);
-        sessionStorage.setItem("token", newToken);
+  // const login = async () => {
+  //   try {
+  //     let data = JSON.stringify({
+  //       username: import.meta.env.VITE_REACT_APP_USERNAME,
+  //       password: import.meta.env.VITE_REACT_APP_PASSWORD,
+  //       systemId: import.meta.env.VITE_REACT_APP_SYSTEM_ID,
+  //     });
+  //     let config = {
+  //       method: "post",
+  //       maxBodyLength: Infinity,
+  //       headers: {
+  //         authority: "adminapi.bestlive.io",
+  //         accept: "application/json, text/plain, */*",
+  //         "accept-language": "en-IN,en;q=0.9,mr;q=0.8,lb;q=0.7",
+  //         "cache-control": "no-cache, no-store",
+  //         "content-type": "application/json",
+  //         encryption: "false",
+  //       },
+  //       data: data,
+  //     };
+  //     const response = await axios.post(
+  //       "https://adminapi.bestlive.io/api/login",
+  //       data,
+  //       config
+  //     );
+  //     if (response.status !== 200) {
+  //       response_value = {
+  //         success: false,
+  //         message: response.status,
+  //       };
+  //     } else {
+  //       // console.log(response.data);
+  //       const newToken = response.data.data.token;
+  //       // setToken(newToken);
+  //       sessionStorage.setItem("token", newToken);
 
-        return newToken;
-      }
-    } catch (error) {
-      console.error("Error fetching data:", error);
-    }
-  };
+  //       return newToken;
+  //     }
+  //   } catch (error) {
+  //     console.error("Error fetching data:", error);
+  //   }
+  // };
 
   const sendWhatsAppMessage = async (message) => {
     try {
@@ -80,7 +81,7 @@ const Dashboard = ({ onLogout }) => {
     }
   };
 
-  const fetchUsers = async (token) => {
+  const fetchUsers = async () => {
     try {
       // console.log(token);
       let data = JSON.stringify({
@@ -128,7 +129,7 @@ const Dashboard = ({ onLogout }) => {
       if (token) {
         setIsRefreshing(true); // Add this line to set the refreshing flag
 
-        await fetchUsers(token);
+        await fetchUsers();
 
         await fetchBalance();
 
@@ -138,24 +139,24 @@ const Dashboard = ({ onLogout }) => {
       console.error(e);
     }
   };
-  const fetchData = async () => {
-    try {
-      let tokenFromStorage = sessionStorage.getItem("token");
-      if (!tokenFromStorage) {
-        const newToken = await login();
-        if (newToken) {
-          // console.log(`this is newToken ${newToken}`);
-          setToken(newToken); // Set the token state here as well
-          await fetchUsers(newToken);
-        }
-      } else {
-        setToken(tokenFromStorage); // Set the token state if already present
-        await fetchUsers(tokenFromStorage);
-      }
-    } catch (error) {
-      console.error("Error fetching data:", error);
-    }
-  };
+  // const fetchData = async () => {
+  //   try {
+  //     let tokenFromStorage = sessionStorage.getItem("token");
+  //     if (!tokenFromStorage) {
+  //       const newToken = await login();
+  //       if (newToken) {
+  //         // console.log(`this is newToken ${newToken}`);
+  //         setToken(newToken); // Set the token state here as well
+  //         await fetchUsers(newToken);
+  //       }
+  //     } else {
+  //       setToken(tokenFromStorage); // Set the token state if already present
+  //       await fetchUsers(tokenFromStorage);
+  //     }
+  //   } catch (error) {
+  //     console.error("Error fetching data:", error);
+  //   }
+  // };
 
   const fetchCount = () => {
     axios
@@ -208,7 +209,7 @@ const Dashboard = ({ onLogout }) => {
   };
 
   useEffect(() => {
-    fetchData();
+    fetchUsers();
     fetchCount();
     fetchBalance();
   }, []);
